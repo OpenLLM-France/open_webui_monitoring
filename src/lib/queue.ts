@@ -3,6 +3,9 @@ import customFetch from './fetch';
 
 import type { QueueStatus, QueueJoinResponse, QueueMetrics, TimerInfo, ConnectionResponse, ApiResponse, GetUsersResponse } from './types';
 
+/**
+ * Helps interface with the quieue API developed in Fanline
+ */
 
 // Base API URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -66,7 +69,7 @@ export const leaveQueue = async (userRequest: UserRequest): Promise<{ success: b
 // Confirm Connection
 export const confirmConnection = async (userRequest: UserRequest): Promise<{ session_duration: number, total_duration: number }> => {
     try {
-        const response = await customFetch(`${API_URL}/queue/confirm`, {
+        const response = await customFetch(`${API_URL}/queue/confirm/${userRequest.user_id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -93,9 +96,9 @@ export const confirmConnection = async (userRequest: UserRequest): Promise<{ ses
 // Récupérer le statut
 export const getStatus = async (userId: string): Promise<QueueStatus> => {
     try {
-        console.log('Tentative de getStatus pour:', userId);
+        // console.log('Tentative de getStatus pour:', userId);
         const response = await customFetch(`${API_URL}/queue/status/${userId}`);
-        console.log('Réponse getStatus:', response.status);
+        // console.log('Réponse getStatus:', response.status);
 
         if (!response.ok) {
             const error = await response.json();
@@ -104,7 +107,7 @@ export const getStatus = async (userId: string): Promise<QueueStatus> => {
         }
 
         const data = await response.json();
-        console.log('Données getStatus:', data);
+        // console.log('Données getStatus:', data);
         return {
             user_id: data.user_id,
             status: data.status,

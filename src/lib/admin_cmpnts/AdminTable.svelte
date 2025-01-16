@@ -10,11 +10,14 @@
     import { TrashBinSolid } from "flowbite-svelte-icons";
     import { Button } from "flowbite-svelte";
     import { ArrowUpRightFromSquareSolid } from "flowbite-svelte-icons";
-    import { leaveQueue } from "$lib/queue";
+    import { CheckCircleSolid } from "flowbite-svelte-icons";
+    import { confirmConnection, leaveQueue } from "$lib/queue";
     import type { QueueStatus } from "$lib/types";
+    import { get } from "svelte/store";
 
     export let columns;
     export let data;
+    export let refresh: () => void;
 
     function handleDelete(row: QueueStatus) {
         // Implement your delete logic here
@@ -22,11 +25,31 @@
         leaveQueue(row)
             .then((data) => {
                 console.log(data);
+                refresh();
+                // Wait 500ms -> TODO replace with proper refresh logic
+                setTimeout(() => {
+                    refresh();
+                }, 100);
             })
             .catch((err) => {
                 console.error(err.message);
             });
+    }
 
+    function handleConfirm(row: QueueStatus) {
+        console.log("Confirm row:", row);
+        confirmConnection(row)
+            .then((data) => {
+                console.log(data);
+                refresh();
+                // Wait 500ms -> TODO replace with proper refresh logic
+                setTimeout(() => {
+                    refresh();
+                }, 100);
+            })
+            .catch((err) => {
+                console.error(err.message);
+            });
     }
 </script>
 
@@ -56,8 +79,15 @@
                             </button>
                             <button
                                 class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none rounded-lg text-sm p-2.5"
-                                on:click={() => handlecheckout(row)}
+                                on:click={() => handleCheckout(row)}
                                 ><ArrowUpRightFromSquareSolid
+                                    class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                />
+                            </button>
+                            <button
+                                class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none rounded-lg text-sm p-2.5"
+                                on:click={() => handleConfirm(row)}
+                                ><CheckCircleSolid
                                     class="w-5 h-5 text-gray-500 dark:text-gray-400"
                                 />
                             </button>

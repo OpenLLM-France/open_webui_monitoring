@@ -1,13 +1,14 @@
 <script>
     import AdminTimeline from "$lib/admin_cmpnts/AdminTimeline.svelte";
     import AdminChart from "$lib/admin_cmpnts/AdminChart.svelte";
-    import AdminWarning from "$lib/admin_cmpnts/AdminWarning.svelte";
 
     let test_data = {
         name: "Users",
         data: [1, 5, 3, 10],
         color: "#1C64F2",
     };
+
+    
 </script>
 
 <div class="w-full p-4 h-screen overflow-y-auto">
@@ -20,4 +21,6 @@
         height="200px"
         show_graph={false}
     />
+
+    
 </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import AdminChart from "$lib/admin_cmpnts/AdminChart.svelte";
     import AdminTable from "$lib/admin_cmpnts/AdminTable.svelte";
-    import { getStatus } from "$lib/queue";
+    import { getStatus, getTimers } from "$lib/queue";
     import { getUsers } from "$lib/queue";
     import type { QueueStatus, UserRequest } from "$lib/types";
     import { Button } from "flowbite-svelte";
@@ -26,8 +26,13 @@
         {
             label: "Position",
             key: "position",
+        },
+        {
+            label: "Remaining time",
+            key: "remaining_time",
         }
     ];
+    
     let users: {
         active_users: QueueStatus[];
         draft_users: QueueStatus[];
@@ -42,31 +47,29 @@
         try {
             const data = await getUsers();
 
-            users.active_users = await Promise.all(
-                data.active_users.map(
-                    async (user_id: string) => await getStatus(user_id)
-                )
-            );
+            const fetchStatusesAndTimers = async (userIds: string[]) => {
+                const statuses = await Promise.all(userIds.map(getStatus));
+                const timers = await Promise.all(userIds.map(getTimers));
+                return statuses.map((status, index) => ({
+                    ...status,
+                    remainingtime: timers[index],
+                }));
+            };
 
-            users.draft_users = await Promise.all(
-                data.draft_users.map(
-                    async (user_id: string) => await getStatus(user_id)
-                )
-            );
+            users.active_users = await fetchStatusesAndTimers(data.active_users);
+            users.draft_users = await fetchStatusesAndTimers(data.draft_users);
+            users.waiting_users = await fetchStatusesAndTimers(data.waiting_users);
 
-            users.waiting_users = await Promise.all(
-                data.waiting_users.map(
-                    async (user_id: string) => await getStatus(user_id)
-                )
-            );
+            console.log(users);
         } catch (error) {
             console.error("Error fetching queue status:", error);
         }
     }
 
-    setInterval(() => {
-        fetchCurQueueStatus();
-    }, 5000);
+    // TODO Find a cleaner way to refresh the queue status
+    setInterval(fetchCurQueueStatus, 2000);
+
+
 
     onMount(() => {
         fetchCurQueueStatus();
@@ -77,7 +80,7 @@
      *
      * @returns A UserRequest object with the generated user's random user_id.
      */
-    function generateRandomUser() {
+     function generateRandomUser() {
         let new_user_request: UserRequest = {
             user_id: Math.random().toString(36).substring(2, 9),
         };
@@ -98,8 +101,8 @@
             .catch((err) => {
                 console.error(err.message);
             });
-        
     }
+
 </script>
 
 <div class="w-full p-4 h-screen overflow-y-auto">
@@ -109,7 +112,8 @@
         >
     </div>
 
-    <div class="grid grid-cols-2 gap-4 mb-4">
+    <!-- Unused charts -->
+    <!-- <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="w-full">
             <AdminChart
                 main_value="2"
@@ -126,16 +130,28 @@
             height="200px"
             show_graph={true}
         />
-    </div>
+    </div> -->
     <div class="grid grid-cols-2 gap-4 mb-4">
-        <AdminTable {columns} data={users.active_users} />
         <div class="col-span-2">
-            <AdminTable {columns} data={users.draft_users} />
+            <AdminTable
+                {columns}
+                data={users.active_users}
+                refresh={fetchCurQueueStatus}
+            />
         </div>
-        <AdminTable {columns} data={users.draft_users} />
-        <AdminTable {columns} data={users.draft_users} />
-        <AdminTable {columns} data={users.draft_users} />
-        <AdminTable {columns} data={users.waiting_users} />
+        <div class="col-span-2">
+            <AdminTable
+                {columns}
+                data={users.draft_users}
+                refresh={fetchCurQueueStatus}
+            />
+        </div>
+        <div class="col-span-2">
+            <AdminTable
+                {columns}
+                data={users.waiting_users}
+                refresh={fetchCurQueueStatus}
+            />
+        </div>
     </div>
-
 </div>

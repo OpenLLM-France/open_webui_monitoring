@@ -1,3 +1,5 @@
+import { notificationStore, showNotification } from '../stores/notificationStore';
+
 // Fonction pour détecter l'environnement d'exécution
 const isBrowser = typeof window !== 'undefined' && typeof window.fetch === 'function';
 
@@ -17,6 +19,7 @@ const customFetch = async (url: string, options?: UniversalRequestInit): Promise
         return await nodeFetch(url, options as any) as unknown as Response;
     } catch (error) {
         if (error instanceof TypeError && error.message === 'Failed to fetch') {
+            showNotification(`Erreur lors de la communication avec le serveur - ${url}`, 'error' );
             throw new Error('Le serveur n\'est pas disponible');
         }
         throw error;
