@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import {
         Chart,
         Card,
@@ -7,7 +7,16 @@
         Dropdown,
         DropdownItem,
     } from "flowbite-svelte"; 
-    let { main_value, unit, chart_data, height, show_graph } = $$props;
+
+    export let main_value;
+    export let unit;
+    export let chart_data = undefined;
+    export let height = "200px";
+    export let show_graph;
+
+    if (chart_data === undefined) {
+        show_graph = false;
+    }
 
     let options = {
         chart: {
@@ -76,7 +85,7 @@
 </script>
 
 <!-- TODO Could end up throwing an error if chart_data is undefined -->
-{#if chart_data.data && chart_data.data.length > 0}
+{#if (chart_data !== undefined && chart_data !== null) || main_value !== undefined}
 <div class="test">
     <Card class="max-w-none">
         <div class="flex justify-between">

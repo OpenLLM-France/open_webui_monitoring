@@ -8,12 +8,6 @@
     let draft = 0;
     let waiting = 0;
 
-    let test_data = {
-        name: "Users",
-        data: [1, 5, 3, 10],
-        color: "#1C64F2",
-    };
-
     function updateMetrics() {
         getMetrics().then((data) => {
             active = data.active_users;
@@ -43,21 +37,18 @@
         main_value="{active}"
         unit="Users speaking to Lucie"
         height="200px"
-        chart_data={test_data}
         show_graph={false}
     />
     <AdminChart
         main_value="{draft}"
         unit="Users in draft Queue"
         height="200px"
-        chart_data={test_data}
         show_graph={false}
     />
     <AdminChart
         main_value="{waiting}"
         unit="Users waiting"
         height="200px"
-        chart_data={test_data}
         show_graph={false}
     />
     </div>
