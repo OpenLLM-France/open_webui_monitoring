@@ -22,9 +22,9 @@ export interface QueueJoinResponse {
 export interface QueueMetrics {
     active_users: number;
     waiting_users: number;
+    draft_users: number;
     total_slots: number;
-    average_wait_time: number;
-    average_session_time: number;
+    total_accounts: number;
 }
 
 export interface TimerInfo {
@@ -57,4 +57,8 @@ export interface GetUsersResponse {
     waiting_users: string[];
     draft_users: string[];
     active_users: string[];
+}
+
+export interface DurationUpdate {
+    duration: number;
 }

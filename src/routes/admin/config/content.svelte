@@ -2,32 +2,46 @@
     import { Card, Toggle, Button, Range, Label, Input, Modal } from "flowbite-svelte";
     import ConfigSaveToast from "$lib/admin_cmpnts/ConfigSaveToast.svelte";
 
+    import { updateDraftDuration, updateMaxUsers, updateSessionDuration } from "$lib/queue";
+    import type { DurationUpdate } from "$lib/types";
+
     // Keep in mind these values are the MAXIMUM values for the range selectors, not the current values
     const max_nb_connections_range = 1000;
     const draft_time_limit_range = 60; // In minutes
+    const demo_time_limit_range = 60; // In minutes
 
     let confirmationModal = false;
 
-    let initial_config = {
+    let default_config = {
         max_nb_connections: 50,
         draft_time_limit: 5,
+        demo_time_limit: 5,
         enable_new_connections: true,
     };
 
     let editable_config = {
         max_nb_connections: 50,
         draft_time_limit: 5,
+        demo_time_limit: 5,
         enable_new_connections: true,
     };
 
     function check_changes(): void {
-        if (JSON.stringify(initial_config) != JSON.stringify(editable_config)) { // I'll be honest, I don't like this
+        if (JSON.stringify(default_config) != JSON.stringify(editable_config)) { // I'll be honest, I don't like this
             changes = true;
         } else {
             changes = false;
         }
     }
     let changes = false;
+
+    function save_changes(): void {
+        default_config = JSON.parse(JSON.stringify(editable_config));
+        updateMaxUsers(editable_config.max_nb_connections);
+        updateDraftDuration({ duration: editable_config.draft_time_limit });
+        updateSessionDuration({ duration: editable_config.demo_time_limit });
+        check_changes();
+    }
     
 </script>
 
@@ -73,6 +87,23 @@
                     />
                 </div>
             </div>
+            <div>
+                <Label>Demo time limit (in minutes)</Label>
+                <div class="flex items-center gap-4">
+                    <Range
+                        min="0"
+                        max={demo_time_limit_range}
+                        bind:value={editable_config.demo_time_limit}
+                        on:change={check_changes}
+                    />
+                    <Input
+                        type="number"
+                        bind:value={editable_config.demo_time_limit}
+                        class="w-16"
+                        on:change={check_changes}
+                    />
+                </div>
+            </div>
         </Card>
     </div>
 
@@ -97,5 +128,5 @@
             </Modal>
         </Card>
     </div>
-    <ConfigSaveToast show={changes}/>
+    <ConfigSaveToast show={changes} handleClick={save_changes}/>
 </div>

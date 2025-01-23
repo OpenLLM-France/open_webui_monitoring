@@ -1,4 +1,4 @@
-import type { UserRequest } from './types';
+import type { DurationUpdate, UserRequest } from './types';
 import customFetch from './fetch';
 
 import type { QueueStatus, QueueJoinResponse, QueueMetrics, TimerInfo, ConnectionResponse, ApiResponse, GetUsersResponse } from './types';
@@ -8,7 +8,7 @@ import type { QueueStatus, QueueJoinResponse, QueueMetrics, TimerInfo, Connectio
  */
 
 // Base API URL
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://lucie.chat';
 
 // Fonction utilitaire pour gérer les erreurs de fetch
 const handleFetchError = (error: unknown) => {
@@ -23,7 +23,7 @@ const handleFetchError = (error: unknown) => {
 export const joinQueue = async (userRequest: UserRequest): Promise<{ position: number }> => {
     try {
         console.log('Tentative de joinQueue avec:', userRequest);
-        const response = await customFetch(`${API_URL}/queue/join/${userRequest.user_id}`, {
+        const response = await customFetch(`${API_URL}/queue/join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export const joinQueue = async (userRequest: UserRequest): Promise<{ position: n
 
 // Leave Queue
 export const leaveQueue = async (userRequest: UserRequest): Promise<{ success: boolean }> => {
-    const response = await customFetch(`${API_URL}/queue/leave/${userRequest.user_id}`, {
+    const response = await customFetch(`${API_URL}/queue/leave`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export const leaveQueue = async (userRequest: UserRequest): Promise<{ success: b
 // Confirm Connection
 export const confirmConnection = async (userRequest: UserRequest): Promise<{ session_duration: number, total_duration: number }> => {
     try {
-        const response = await customFetch(`${API_URL}/queue/confirm/${userRequest.user_id}`, {
+        const response = await customFetch(`${API_URL}/queue/confirm/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -94,12 +94,15 @@ export const confirmConnection = async (userRequest: UserRequest): Promise<{ ses
 };
 
 // Récupérer le statut
-export const getStatus = async (userId: string): Promise<QueueStatus> => {
+export const getStatus = async (userRequest: UserRequest): Promise<QueueStatus> => {
     try {
-        // console.log('Tentative de getStatus pour:', userId);
-        const response = await customFetch(`${API_URL}/queue/status/${userId}`);
-        // console.log('Réponse getStatus:', response.status);
-
+        const response = await customFetch(`${API_URL}/queue/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userRequest),
+        });
         if (!response.ok) {
             const error = await response.json();
             console.error('Erreur getStatus:', error);
@@ -153,9 +156,9 @@ export const getMetrics = async (): Promise<QueueMetrics> => {
         return {
             active_users: data.active_users,
             waiting_users: data.waiting_users,
+            draft_users: data.draft_users,
             total_slots: data.total_slots,
-            average_wait_time: data.average_wait_time || 0,
-            average_session_time: data.average_session_time || 0
+            total_accounts: data.total_accounts,
         };
     } catch (error) {
         handleFetchError(error);
@@ -164,9 +167,15 @@ export const getMetrics = async (): Promise<QueueMetrics> => {
 };
 
 // Get Timers
-export const getTimers = async (userId: string): Promise<TimerInfo> => {
+export const getTimers = async (userRequest: UserRequest): Promise<TimerInfo> => {
     try {
-        const response = await customFetch(`${API_URL}/queue/timers/${userId}`);
+        const response = await customFetch(`${API_URL}/queue/timers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userRequest),
+        });
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail);
@@ -201,6 +210,74 @@ export const getUsers = async (): Promise<GetUsersResponse> => {
             draft_users: data.draft_users,
             active_users: data.active_users
         };
+    } catch (error) {
+        handleFetchError(error);
+        throw error;
+    }
+};
+
+
+export const updateSessionDuration = async (durationUpdate: DurationUpdate): Promise<GetUsersResponse> => {
+    try {
+        const response = await customFetch(`${API_URL}/queue/update_session_duration`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(durationUpdate),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail);
+        }
+
+        const data = await response.json();
+        return response.json();
+
+    } catch (error) {
+        handleFetchError(error);
+        throw error;
+    }
+};
+
+export const updateMaxUsers = async (maxUsers: number): Promise<{ success: boolean }> => {
+    try {
+        const response = await customFetch(`${API_URL}/queue/update_max_users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ "max_users": maxUsers }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail);
+        }
+
+        return await response.json();
+    } catch (error) {
+        handleFetchError(error);
+        throw error;
+    }
+};
+
+export const updateDraftDuration = async (durationUpdate: DurationUpdate): Promise<{ success: boolean }> => {
+    try {
+        const response = await customFetch(`${API_URL}/queue/update_draft_duration`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(durationUpdate),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail);
+        }
+
+        return await response.json();
     } catch (error) {
         handleFetchError(error);
         throw error;

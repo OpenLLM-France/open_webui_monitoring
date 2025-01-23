@@ -42,23 +42,19 @@
         draft_users: [],
         waiting_users: [],
     };
-
+    
     async function fetchCurQueueStatus() {
         try {
-            const data = await getUsers();
+            const { active_users, draft_users, waiting_users } = await getUsers();
 
-            const fetchStatusesAndTimers = async (userIds: string[]) => {
-                const statuses = await Promise.all(userIds.map(getStatus));
-                const timers = await Promise.all(userIds.map(getTimers));
-                return statuses.map((status, index) => ({
-                    ...status,
-                    remainingtime: timers[index],
-                }));
+            const fetchStatuses = async (userRequests: UserRequest[]) => 
+                await Promise.all(userRequests.map(getStatus));
+
+            users = {
+                active_users: await fetchStatuses(active_users.map(user_id => ({ user_id }))),
+                draft_users: await fetchStatuses(draft_users.map(user_id => ({ user_id }))),
+                waiting_users: await fetchStatuses(waiting_users.map(user_id => ({ user_id }))),
             };
-
-            users.active_users = await fetchStatusesAndTimers(data.active_users);
-            users.draft_users = await fetchStatusesAndTimers(data.draft_users);
-            users.waiting_users = await fetchStatusesAndTimers(data.waiting_users);
 
             console.log(users);
         } catch (error) {
@@ -68,8 +64,6 @@
 
     // TODO Find a cleaner way to refresh the queue status
     setInterval(fetchCurQueueStatus, 2000);
-
-
 
     onMount(() => {
         fetchCurQueueStatus();
